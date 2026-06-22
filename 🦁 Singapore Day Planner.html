@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦁 Singapore Day Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --red: #e63946;
+      --red-dark: #c1121f;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #1e2a35;
+      --muted: #6b7a8a;
+      --border: #dde4ec;
+      --shadow-sm: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 120px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(140deg, #e63946 0%, #c1121f 60%, #9d0208 100%);
+      color: #fff;
+      padding: 22px 16px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 220px; height: 220px; border-radius: 50%;
+      background: rgba(255,255,255,0.06); pointer-events: none;
+    }
+    .header::after {
+      content: ''; position: absolute; bottom: -80px; left: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(255,255,255,0.04); pointer-events: none;
+    }
+    .header-inner {
+      position: relative; z-index: 1;
+      max-width: 600px; margin: 0 auto;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .header-lion { font-size: 42px; line-height: 1; }
+    .header h1 { font-size: 21px; font-weight: 700; line-height: 1.2; }
+    .header p  { font-size: 12px; opacity: .82; margin-top: 2px; }
+
+    /* ── Plan Switcher ── */
+    .plan-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+    }
+    .plan-bar-inner {
+      max-width: 600px; margin: 0 auto;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .plan-tabs {
+      flex: 1; display: flex; gap: 6px;
+      overflow-x: auto; scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .plan-tabs::-webkit-scrollbar { display: none; }
+    .plan-tab {
+      padding: 7px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: white; color: var(--muted);
+      cursor: pointer; white-space: nowrap;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .plan-tab:hover { border-color: var(--red); color: var(--red); }
+    .plan-tab.active {
+      background: var(--red); color: white;
+      border-color: var(--red);
+    }
+    .plan-new-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg); border: 1.5px solid var(--border);
+      color: var(--muted); font-size: 18px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .15s;
+    }
+    .plan-new-btn:hover { border-color: var(--red); color: var(--red); background: #fff5f5; }
+
+    /* ── Plan Info Card ── */
+    .plan-info {
+      background: var(--card); border-radius: 16px;
+      padding: 14px 16px; margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .plan-info-head {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .plan-info-body { flex: 1; }
+    .plan-info-name {
+      font-size: 16px; font-weight: 700; line-height: 1.3;
+      color: var(--text);
+    }
+    .plan-info-location {
+      font-size: 12px; color: var(--muted); margin-top: 2px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .plan-info-memo {
+      font-size: 12.5px; color: var(--muted); margin-top: 8px;
+      line-height: 1.55; font-style: italic;
+      padding: 8px 12px; background: var(--bg); border-radius: 10px;
+    }
+    .plan-info-memo:empty { display: none; }
+    .plan-edit-btn {
+      background: var(--bg); border: none; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 50%;
+      font-size: 14px; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .15s;
+    }
+    .plan-edit-btn:hover { background: #ffebee; color: var(--red); }
+    .plan-delete-btn {
+      background: none; border: none; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 50%;
+      font-size: 14px; color: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .15s;
+    }
+    .plan-delete-btn:hover { background: #ffebee; color: var(--red); }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      background: var(--card);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .stats-inner { max-width: 600px; margin: 0 auto; display: flex; }
+    .stat {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 11px 8px; border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-size: 17px; font-weight: 700; color: var(--red); line-height: 1.2; }
+    .stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Main ── */
+    .main { max-width: 600px; margin: 0 auto; padding: 16px 14px; }
+
+    /* ── Shared section card ── */
+    .section-card {
+      background: var(--card); border-radius: 16px;
+      padding: 14px 16px; margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-title {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .6px;
+      color: var(--muted); margin-bottom: 10px;
+    }
+
+    /* ── Day Bar ── */
+    .day-bar {
+      height: 22px; background: var(--bg);
+      border-radius: 11px; position: relative; overflow: hidden;
+    }
+    .day-seg {
+      position: absolute; top: 0; height: 100%;
+      border-radius: 3px; opacity: .85;
+      transition: left .3s, width .3s;
+    }
+    .day-ticks { display: flex; justify-content: space-between; margin-top: 5px; }
+    .day-tick { font-size: 10px; color: var(--muted); }
+
+    /* ── Checklist ── */
+    .checklist-header {
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; user-select: none;
+    }
+    .checklist-header .section-title { margin-bottom: 0; flex: 1; }
+    .cl-count {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      background: var(--bg); padding: 2px 9px; border-radius: 20px;
+    }
+    .cl-count.all-done { background: #e8f5e9; color: #2e7d32; }
+    .cl-chevron {
+      width: 24px; height: 24px; background: var(--bg); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--muted);
+      transition: transform .2s;
+    }
+    .cl-chevron.open { transform: rotate(180deg); }
+
+    .cl-body { overflow: hidden; }
+    .cl-progress {
+      height: 4px; background: var(--bg); border-radius: 2px;
+      margin: 10px 0 2px; overflow: hidden;
+    }
+    .cl-progress-fill {
+      height: 100%; background: #4caf50; border-radius: 2px;
+      transition: width .35s ease;
+    }
+    .cl-items { list-style: none; margin-top: 8px; }
+    .cl-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 2px; border-bottom: 1px solid var(--bg);
+      cursor: pointer; border-radius: 8px;
+      transition: background .12s;
+    }
+    .cl-item:last-child { border-bottom: none; }
+    .cl-item:hover { background: var(--bg); }
+    .cl-box {
+      width: 20px; height: 20px; border-radius: 6px;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; transition: all .15s;
+    }
+    .cl-item.done .cl-box  { background: #4caf50; border-color: #4caf50; color: white; }
+    .cl-item.done .cl-lbl  { text-decoration: line-through; color: var(--muted); }
+    .cl-emoji { font-size: 15px; flex-shrink: 0; }
+    .cl-lbl { font-size: 13px; flex: 1; line-height: 1.35; }
+    .cl-del {
+      background: none; border: none; cursor: pointer;
+      font-size: 15px; color: var(--border); padding: 3px 5px;
+      border-radius: 6px; transition: color .12s; flex-shrink: 0;
+    }
+    .cl-del:hover { color: var(--red); }
+    .cl-add {
+      display: flex; gap: 8px; margin-top: 11px;
+    }
+    .cl-add input {
+      flex: 1; padding: 9px 12px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: 'Poppins', sans-serif; font-size: 13px;
+      color: var(--text); outline: none; background: white;
+      transition: border-color .18s;
+    }
+    .cl-add input:focus { border-color: var(--red); }
+    .cl-add button {
+      padding: 9px 14px; background: var(--red); color: white;
+      border: none; border-radius: 10px;
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s; flex-shrink: 0;
+    }
+    .cl-add button:hover { opacity: .88; }
+
+    /* ── Warnings ── */
+    .warnings { margin-bottom: 14px; }
+    .warnings.hidden { display: none; }
+    .warn-item {
+      padding: 11px 14px; border-radius: 12px; margin-bottom: 8px;
+      font-size: 12.5px; font-weight: 500; line-height: 1.5;
+    }
+    .warn-time    { background: #fff8e1; border-left: 3px solid #ffb300; color: #6d4c00; }
+    .warn-overlap { background: #fce4ec; border-left: 3px solid var(--red); color: #7f0000; }
+    .warn-late    { background: #e8eaf6; border-left: 3px solid #5c6bc0; color: #1a237e; }
+
+    /* ── Timeline ── */
+    .stop-row { display: flex; gap: 10px; animation: pop .28s ease; }
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stop-left {
+      width: 66px; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: flex-end;
+      padding-top: 8px;
+    }
+    .stop-time-pill {
+      font-size: 10.5px; font-weight: 600; color: var(--card);
+      background: var(--dot-color, #aaa);
+      padding: 2px 7px; border-radius: 20px;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    }
+    .stop-vdot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--dot-color, #aaa);
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px var(--dot-color, #aaa);
+      margin: 5px 2px 0;
+    }
+    .stop-vline {
+      flex: 1; width: 2px; background: var(--border);
+      margin: 3px 3px 0; min-height: 16px;
+    }
+    .stop-vline.clash {
+      background: repeating-linear-gradient(
+        to bottom, var(--red) 0, var(--red) 4px, transparent 4px, transparent 8px
+      );
+    }
+
+    .stop-right { flex: 1; padding-bottom: 4px; }
+    .stop-card {
+      background: var(--card); border-radius: 14px;
+      padding: 13px 14px; box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--dot-color, #aaa);
+    }
+    .stop-card-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .stop-icon { font-size: 19px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .stop-name { font-size: 14px; font-weight: 600; flex: 1; line-height: 1.35; }
+    .del-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 17px; color: var(--muted); line-height: 1;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background .15s, color .15s;
+    }
+    .del-btn:hover { background: #ffebee; color: var(--red); }
+
+    .stop-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+    .badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
+    .b-time { background: #f0f4f8; color: var(--muted); }
+    .b-cost { background: #e8f5e9; color: #2e7d32; }
+    .b-free { background: #e0f7fa; color: #006064; }
+    .stop-notes { margin-top: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.55; font-style: italic; }
+
+    /* ── Travel gap connector ── */
+    .travel-row { display: flex; gap: 10px; }
+    .travel-left {
+      width: 66px; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: flex-end;
+    }
+    .travel-vline {
+      flex: 1; width: 2px; margin: 0 3px; min-height: 30px;
+    }
+    .travel-vline-gap {
+      background: repeating-linear-gradient(
+        to bottom, #b0bec5 0, #b0bec5 4px, transparent 4px, transparent 8px
+      );
+    }
+    .travel-vline-solid { background: var(--border); }
+    .travel-right { flex: 1; display: flex; align-items: center; padding: 6px 0; }
+    .travel-pill {
+      font-size: 11px; font-weight: 600;
+      background: #e3f2fd; color: #1565c0;
+      padding: 4px 11px; border-radius: 20px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .travel-on-time {
+      font-size: 11px; font-weight: 500;
+      background: #f3e5f5; color: #6a1b9a;
+      padding: 4px 11px; border-radius: 20px;
+    }
+
+    /* ── End marker ── */
+    .timeline-end {
+      display: flex; align-items: center; gap: 8px;
+      padding-left: 76px; margin-bottom: 10px; margin-top: 4px;
+    }
+    .end-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--bg); flex-shrink: 0;
+    }
+    .end-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+    /* ── Empty State ── */
+    #emptyState { text-align: center; padding: 52px 24px; }
+    #emptyState .e-icon { font-size: 52px; }
+    #emptyState h3 { font-size: 17px; font-weight: 600; margin: 14px 0 6px; }
+    #emptyState p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed; bottom: 24px; right: 20px;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(140deg, var(--red), var(--red-dark));
+      color: white; border: none; font-size: 30px; line-height: 1;
+      cursor: pointer; z-index: 200;
+      box-shadow: 0 4px 20px rgba(230,57,70,.5);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .18s, box-shadow .18s;
+    }
+    .fab:hover  { transform: scale(1.08); box-shadow: 0 6px 26px rgba(230,57,70,.6); }
+    .fab:active { transform: scale(.94); }
+
+    /* ── Modal ── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.42);
+      z-index: 300; display: flex; align-items: flex-end; justify-content: center;
+    }
+    .overlay.hidden { display: none; }
+    .modal {
+      background: var(--card); width: 100%; max-width: 600px;
+      border-radius: 24px 24px 0 0; max-height: 93vh; overflow-y: auto;
+      animation: rise .28s ease;
+    }
+    @media (min-width: 640px) {
+      .overlay { align-items: center; }
+      .modal { border-radius: 24px; margin: 16px; max-height: 90vh; }
+    }
+    @keyframes rise {
+      from { transform: translateY(60px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .modal-handle {
+      width: 38px; height: 4px; border-radius: 2px;
+      background: var(--border); margin: 12px auto 0;
+    }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+    }
+    .modal-head h2 { font-size: 17px; font-weight: 700; }
+    .modal-close {
+      background: var(--bg); border: none; cursor: pointer;
+      width: 30px; height: 30px; border-radius: 50%; font-size: 17px;
+      color: var(--muted); display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-body { padding: 18px 20px 24px; }
+
+    .fg { margin-bottom: 15px; }
+    .fg label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .fg input, .fg select, .fg textarea {
+      width: 100%; padding: 11px 13px;
+      border: 1.5px solid var(--border); border-radius: 11px;
+      font-family: 'Poppins', sans-serif; font-size: 13.5px;
+      color: var(--text); background: white; outline: none;
+      transition: border-color .18s; appearance: none;
+    }
+    .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--red); }
+    .fg textarea { resize: none; height: 72px; }
+    .fg select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%236b7a8a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 11px center;
+      background-size: 15px; padding-right: 34px;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .dur-row { display: flex; align-items: center; gap: 6px; }
+    .dur-row input { width: 64px !important; text-align: center; }
+    .dur-lbl { font-size: 12.5px; color: var(--muted); flex-shrink: 0; }
+    .cost-row { display: flex; }
+    .cost-pre {
+      padding: 11px 12px; background: var(--bg); border: 1.5px solid var(--border);
+      border-right: none; border-radius: 11px 0 0 11px;
+      font-size: 13.5px; font-weight: 600; color: var(--muted); white-space: nowrap;
+    }
+    .cost-row input { border-radius: 0 11px 11px 0 !important; }
+    .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .btn-cancel {
+      flex: 1; padding: 13px; background: var(--bg); border: none;
+      border-radius: 11px; font-family: 'Poppins', sans-serif;
+      font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-cancel:hover { background: var(--border); }
+    .btn-add {
+      flex: 2; padding: 13px;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: white; border: none; border-radius: 11px;
+      font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-add:hover { opacity: .92; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <span class="header-lion">🦁</span>
+    <div>
+      <h1>Singapore Day Planner</h1>
+      <p>Build your perfect day out in the Lion City</p>
+    </div>
+  </div>
+</header>
+
+<!-- Plan Switcher -->
+<div class="plan-bar">
+  <div class="plan-bar-inner">
+    <div class="plan-tabs" id="planTabs"></div>
+    <button class="plan-new-btn" onclick="openPlanModal()" title="New plan">+</button>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat">
+      <span class="stat-val" id="sStops">—</span>
+      <span class="stat-lbl">Stops</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="sTime">—</span>
+      <span class="stat-lbl">Total Time</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="sBudget">$0</span>
+      <span class="stat-lbl">Budget (SGD)</span>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- Plan Info -->
+  <div class="plan-info" id="planInfo">
+    <div class="plan-info-head">
+      <div class="plan-info-body">
+        <div class="plan-info-name" id="planName"></div>
+        <div class="plan-info-location" id="planLocation"></div>
+      </div>
+      <button class="plan-edit-btn" onclick="openPlanModal(currentPlanId)" title="Edit plan">✏️</button>
+      <button class="plan-delete-btn" onclick="deletePlan(currentPlanId)" title="Delete plan">🗑️</button>
+    </div>
+    <div class="plan-info-memo" id="planMemo"></div>
+  </div>
+
+  <!-- Day bar -->
+  <div class="section-card">
+    <div class="section-title">Day at a Glance — 8 AM to 10 PM</div>
+    <div class="day-bar" id="dayBar"></div>
+    <div class="day-ticks">
+      <span class="day-tick">8 AM</span>
+      <span class="day-tick">12 PM</span>
+      <span class="day-tick">4 PM</span>
+      <span class="day-tick">8 PM</span>
+      <span class="day-tick">10 PM</span>
+    </div>
+  </div>
+
+  <!-- Checklist -->
+  <div class="section-card" id="clCard">
+    <div class="checklist-header" onclick="toggleChecklist()">
+      <div class="section-title">Things to Bring</div>
+      <span class="cl-count" id="clCount">0 / 0</span>
+      <div class="cl-chevron open" id="clChevron">▼</div>
+    </div>
+    <div class="cl-body" id="clBody">
+      <div class="cl-progress"><div class="cl-progress-fill" id="clFill" style="width:0%"></div></div>
+      <ul class="cl-items" id="clItems"></ul>
+      <div class="cl-add">
+        <input id="clInput" type="text" placeholder="Add an item…" maxlength="60"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addCheckItem()}">
+        <button onclick="addCheckItem()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="warnings" class="warnings hidden"></div>
+  <div id="timeline"></div>
+
+  <div id="emptyState">
+    <div class="e-icon">🗺️</div>
+    <h3>No stops yet!</h3>
+    <p>Tap the <strong>+</strong> button to add your first stop.<br>Build your itinerary one place at a time.</p>
+  </div>
+
+</main>
+
+<button class="fab" onclick="openStopModal()" aria-label="Add stop">+</button>
+
+<!-- Stop Modal -->
+<div id="stopOverlay" class="overlay hidden" onclick="if(event.target===this)closeStopModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2>Add a Stop ✨</h2>
+      <button class="modal-close" onclick="closeStopModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="stopForm" onsubmit="submitStop(event)">
+        <div class="fg">
+          <label for="fName">Place Name</label>
+          <input id="fName" type="text" placeholder="e.g. Jewel Changi Airport" required maxlength="70">
+        </div>
+        <div class="fg">
+          <label for="fCat">Category</label>
+          <select id="fCat">
+            <option value="attraction">🏛️ Attraction</option>
+            <option value="food">🍜 Food &amp; Drink</option>
+            <option value="shopping">🛍️ Shopping</option>
+            <option value="nature">🌿 Nature</option>
+            <option value="transport">🚇 Transport</option>
+            <option value="entertain">🎭 Entertainment</option>
+            <option value="other">📍 Other</option>
+          </select>
+        </div>
+        <div class="two-col">
+          <div class="fg">
+            <label for="fTime">Start Time</label>
+            <input id="fTime" type="time" required>
+          </div>
+          <div class="fg">
+            <label>Duration</label>
+            <div class="dur-row">
+              <input id="fDh" type="number" min="0" max="12" value="1" style="width:62px">
+              <span class="dur-lbl">h</span>
+              <input id="fDm" type="number" min="0" max="59" step="15" value="0" style="width:62px">
+              <span class="dur-lbl">m</span>
+            </div>
+          </div>
+        </div>
+        <div class="fg">
+          <label for="fCost">Estimated Cost (SGD)</label>
+          <div class="cost-row">
+            <span class="cost-pre">$</span>
+            <input id="fCost" type="number" min="0" step="0.5" value="0">
+          </div>
+        </div>
+        <div class="fg">
+          <label for="fNotes">Notes <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <textarea id="fNotes" placeholder="Tips, booking links, reminders..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" onclick="closeStopModal()">Cancel</button>
+          <button type="submit" class="btn-add">Add Stop ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Plan Modal (create/edit) -->
+<div id="planOverlay" class="overlay hidden" onclick="if(event.target===this)closePlanModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2 id="planModalTitle">New Plan 📋</h2>
+      <button class="modal-close" onclick="closePlanModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="planForm" onsubmit="submitPlan(event)">
+        <div class="fg">
+          <label for="pName">Plan Name</label>
+          <input id="pName" type="text" placeholder="e.g. Sentosa Fun Day" required maxlength="50">
+        </div>
+        <div class="fg">
+          <label for="pLocation">Location / Area</label>
+          <input id="pLocation" type="text" placeholder="e.g. Marina Bay, Sentosa Island" maxlength="60">
+        </div>
+        <div class="fg">
+          <label for="pMemo">Memo <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <textarea id="pMemo" placeholder="Notes about this plan — who's coming, what to expect, links..."></textarea>
+        </div>
+        <input type="hidden" id="pEditId" value="">
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" onclick="closePlanModal()">Cancel</button>
+          <button type="submit" class="btn-add" id="planSubmitBtn">Create Plan ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Plans data ────────────────────────────────────────────────────────────
+  let plans = [];
+  let currentPlanId = null;
+  let planNextId = 1;
+  let stopNextId = 1;
+
+  const CATS = {
+    attraction: { icon: '🏛️', color: '#2ec4b6' },
+    food:       { icon: '🍜', color: '#ff9f1c' },
+    shopping:   { icon: '🛍️', color: '#e91e63' },
+    nature:     { icon: '🌿', color: '#4caf50' },
+    transport:  { icon: '🚇', color: '#2196f3' },
+    entertain:  { icon: '🎭', color: '#9c27b0' },
+    other:      { icon: '📍', color: '#90a4ae' },
+  };
+
+  const DAY_START = 8 * 60, DAY_END = 22 * 60, DAY_SPAN = DAY_END - DAY_START;
+
+  const DEFAULT_CHECKLIST = [
+    { emoji: '💳', text: 'EZ-Link card (MRT / bus)' },
+    { emoji: '💵', text: 'Cash (SGD)' },
+    { emoji: '🧴', text: 'Sunscreen SPF 50+' },
+    { emoji: '👟', text: 'Comfortable walking shoes' },
+    { emoji: '🌂', text: 'Compact umbrella / poncho' },
+    { emoji: '💧', text: 'Water bottle' },
+    { emoji: '🔋', text: 'Power bank & charging cable' },
+    { emoji: '📷', text: 'Camera / phone storage cleared' },
+    { emoji: '😎', text: 'Sunglasses' },
+    { emoji: '🩹', text: 'Small first-aid kit' },
+  ];
+
+  function currentPlan() { return plans.find(p => p.id === currentPlanId); }
+
+  function createPlan(name, location, memo, stops) {
+    const clNextId = { val: 1 };
+    const checklist = DEFAULT_CHECKLIST.map(item => ({
+      id: clNextId.val++, emoji: item.emoji, text: item.text, done: false
+    }));
+    const plan = {
+      id: planNextId++,
+      name, location: location || '', memo: memo || '',
+      stops: stops || [],
+      checklist,
+      clNextId: clNextId.val,
+      clOpen: true,
+    };
+    plans.push(plan);
+    return plan;
+  }
+
+  function switchPlan(id) {
+    currentPlanId = id;
+    renderPlanTabs();
+    renderPlanInfo();
+    renderChecklist();
+    render();
+  }
+
+  function deletePlan(id) {
+    if (plans.length <= 1) return;
+    if (!confirm('Delete this plan?')) return;
+    plans = plans.filter(p => p.id !== id);
+    if (currentPlanId === id) {
+      currentPlanId = plans[0].id;
+    }
+    switchPlan(currentPlanId);
+  }
+
+  // ── Plan Modal ────────────────────────────────────────────────────────────
+  function openPlanModal(editId) {
+    const ov = document.getElementById('planOverlay');
+    ov.classList.remove('hidden');
+    const titleEl = document.getElementById('planModalTitle');
+    const btnEl = document.getElementById('planSubmitBtn');
+    document.getElementById('pEditId').value = editId || '';
+
+    if (editId) {
+      const p = plans.find(x => x.id === editId);
+      titleEl.textContent = 'Edit Plan ✏️';
+      btnEl.textContent = 'Save Changes ✓';
+      document.getElementById('pName').value = p.name;
+      document.getElementById('pLocation').value = p.location;
+      document.getElementById('pMemo').value = p.memo;
+    } else {
+      titleEl.textContent = 'New Plan 📋';
+      btnEl.textContent = 'Create Plan ✓';
+      document.getElementById('planForm').reset();
+    }
+    setTimeout(() => document.getElementById('pName').focus(), 80);
+  }
+
+  function closePlanModal() {
+    document.getElementById('planOverlay').classList.add('hidden');
+    document.getElementById('planForm').reset();
+  }
+
+  function submitPlan(e) {
+    e.preventDefault();
+    const name = document.getElementById('pName').value.trim();
+    const location = document.getElementById('pLocation').value.trim();
+    const memo = document.getElementById('pMemo').value.trim();
+    const editId = parseInt(document.getElementById('pEditId').value) || null;
+
+    if (editId) {
+      const p = plans.find(x => x.id === editId);
+      p.name = name;
+      p.location = location;
+      p.memo = memo;
+    } else {
+      const p = createPlan(name, location, memo);
+      currentPlanId = p.id;
+    }
+    closePlanModal();
+    switchPlan(currentPlanId);
+  }
+
+  // ── Plan Tabs & Info ──────────────────────────────────────────────────────
+  function renderPlanTabs() {
+    const el = document.getElementById('planTabs');
+    el.innerHTML = plans.map(p =>
+      `<div class="plan-tab${p.id === currentPlanId ? ' active' : ''}" onclick="switchPlan(${p.id})">${esc(p.name)}</div>`
+    ).join('');
+  }
+
+  function renderPlanInfo() {
+    const p = currentPlan();
+    if (!p) return;
+    document.getElementById('planName').textContent = p.name;
+    const locEl = document.getElementById('planLocation');
+    locEl.innerHTML = p.location ? `📍 ${esc(p.location)}` : '';
+    document.getElementById('planMemo').textContent = p.memo;
+    // Hide delete button if only one plan
+    document.querySelector('.plan-delete-btn').style.display = plans.length > 1 ? '' : 'none';
+  }
+
+  // ── Checklist (per plan) ──────────────────────────────────────────────────
+  let clOpen = true;
+
+  function toggleChecklist() {
+    const p = currentPlan();
+    p.clOpen = !p.clOpen;
+    const body = document.getElementById('clBody');
+    const chevron = document.getElementById('clChevron');
+    body.style.display = p.clOpen ? '' : 'none';
+    chevron.classList.toggle('open', p.clOpen);
+  }
+
+  function toggleCheckItem(id) {
+    const p = currentPlan();
+    const item = p.checklist.find(x => x.id === id);
+    if (item) { item.done = !item.done; renderChecklist(); }
+  }
+
+  function deleteCheckItem(id) {
+    const p = currentPlan();
+    p.checklist = p.checklist.filter(x => x.id !== id);
+    renderChecklist();
+  }
+
+  function addCheckItem() {
+    const p = currentPlan();
+    const input = document.getElementById('clInput');
+    const text = input.value.trim();
+    if (!text) return;
+    p.checklist.push({ id: p.clNextId++, emoji: '📍', text, done: false });
+    input.value = '';
+    renderChecklist();
+    if (!p.clOpen) toggleChecklist();
+  }
+
+  function renderChecklist() {
+    const p = currentPlan();
+    if (!p) return;
+    const done = p.checklist.filter(x => x.done).length;
+    const total = p.checklist.length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+
+    const countEl = document.getElementById('clCount');
+    countEl.textContent = `${done} / ${total}`;
+    countEl.className = 'cl-count' + (done === total && total > 0 ? ' all-done' : '');
+
+    document.getElementById('clFill').style.width = pct + '%';
+
+    document.getElementById('clBody').style.display = p.clOpen ? '' : 'none';
+    document.getElementById('clChevron').classList.toggle('open', p.clOpen);
+
+    const ul = document.getElementById('clItems');
+    ul.innerHTML = p.checklist.map(item => `
+      <li class="cl-item${item.done ? ' done' : ''}" onclick="toggleCheckItem(${item.id})">
+        <div class="cl-box">${item.done ? '✓' : ''}</div>
+        <span class="cl-emoji">${esc(item.emoji)}</span>
+        <span class="cl-lbl">${esc(item.text)}</span>
+        <button class="cl-del" onclick="event.stopPropagation();deleteCheckItem(${item.id})" aria-label="Remove">×</button>
+      </li>`).join('');
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function t2m(t)     { const [h,m] = t.split(':').map(Number); return h*60+m; }
+  function m2t(m)     { const h=Math.floor(m/60)%24, mn=m%60; return `${pad(h)}:${pad(mn)}`; }
+  function pad(n)     { return String(n).padStart(2,'0'); }
+  function fmt(t)     { const [h,m]=t.split(':').map(Number),a=h>=12?'PM':'AM',h12=h%12||12; return `${h12}:${pad(m)} ${a}`; }
+  function dur(min)   { const h=Math.floor(min/60),m=min%60; return h&&m?`${h}h ${m}m`:h?`${h}h`:`${m}m`; }
+  function esc(s)     { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function endTime(s) { return m2t(t2m(s.startTime)+s.duration); }
+
+  // ── Add / Delete stops ───────────────────────────────────────────────────
+  function addStop(data) {
+    const p = currentPlan();
+    const d = (parseInt(data.dh)||0)*60 + (parseInt(data.dm)||0);
+    p.stops.push({ id: stopNextId++, name:data.name, cat:data.cat,
+      startTime:data.time, duration:d, cost:parseFloat(data.cost)||0, notes:data.notes||'' });
+    p.stops.sort((a,b) => t2m(a.startTime)-t2m(b.startTime));
+    render();
+  }
+
+  function deleteStop(id) {
+    const p = currentPlan();
+    p.stops = p.stops.filter(s => s.id !== id);
+    render();
+  }
+
+  // ── Warnings ──────────────────────────────────────────────────────────────
+  function getWarnings(stops) {
+    const w = [];
+    const total = stops.reduce((s,x)=>s+x.duration, 0);
+    if (total > 600)
+      w.push({ type:'time', msg:`🥵 You've packed in ${dur(total)} of activities — that's a very full day! You might want to trim a stop or two to avoid burnout.` });
+    for (let i = 0; i < stops.length-1; i++) {
+      const over = t2m(stops[i].startTime)+stops[i].duration - t2m(stops[i+1].startTime);
+      if (over > 0)
+        w.push({ type:'overlap', msg:`⚡ "${stops[i].name}" and "${stops[i+1].name}" overlap by ${dur(over)}. Adjust your start times!` });
+    }
+    if (stops.length > 0) {
+      const last = stops[stops.length-1];
+      const end = t2m(last.startTime)+last.duration;
+      if (end > 22*60)
+        w.push({ type:'late', msg:`🌙 Your day wraps up at ${fmt(m2t(end))} — quite late! Make sure that suits you.` });
+    }
+    return w;
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function render() {
+    const p = currentPlan();
+    if (!p) return;
+    const stops = p.stops;
+    const total  = stops.reduce((s,x)=>s+x.duration, 0);
+    const budget = stops.reduce((s,x)=>s+x.cost, 0);
+
+    document.getElementById('sStops').textContent  = stops.length || '—';
+    document.getElementById('sTime').textContent   = stops.length ? dur(total) : '—';
+    document.getElementById('sBudget').textContent = `$${budget.toFixed(2)}`;
+
+    // Day bar
+    document.getElementById('dayBar').innerHTML = stops.map(s => {
+      const c = CATS[s.cat] || CATS.other;
+      const left  = Math.max(0, (t2m(s.startTime)-DAY_START)/DAY_SPAN*100);
+      const width = Math.min(100-left, s.duration/DAY_SPAN*100);
+      return `<div class="day-seg" title="${esc(s.name)}: ${fmt(s.startTime)} – ${fmt(endTime(s))}"
+        style="left:${left.toFixed(2)}%;width:${Math.max(width,0.5).toFixed(2)}%;background:${c.color}"></div>`;
+    }).join('');
+
+    // Warnings
+    const warns = getWarnings(stops);
+    const wEl = document.getElementById('warnings');
+    if (warns.length) {
+      wEl.innerHTML = warns.map(w=>`<div class="warn-item warn-${w.type}">${esc(w.msg)}</div>`).join('');
+      wEl.classList.remove('hidden');
+    } else {
+      wEl.classList.add('hidden');
+    }
+
+    // Timeline
+    const tl = document.getElementById('timeline');
+    const es = document.getElementById('emptyState');
+    if (!stops.length) { tl.innerHTML = ''; es.style.display = 'block'; return; }
+    es.style.display = 'none';
+
+    let html = '';
+    stops.forEach((s, i) => {
+      const c = CATS[s.cat] || CATS.other;
+      const nextStop = stops[i+1];
+      const last = !nextStop;
+      const clash = nextStop && t2m(s.startTime)+s.duration > t2m(nextStop.startTime);
+      const gap   = nextStop ? t2m(nextStop.startTime) - (t2m(s.startTime)+s.duration) : 0;
+
+      html += `
+        <div class="stop-row" style="--dot-color:${c.color}">
+          <div class="stop-left">
+            <div class="stop-time-pill">${fmt(s.startTime)}</div>
+            <div class="stop-vdot"></div>
+            ${!last ? `<div class="stop-vline${clash?' clash':''}"></div>` : ''}
+          </div>
+          <div class="stop-right">
+            <div class="stop-card">
+              <div class="stop-card-head">
+                <span class="stop-icon">${c.icon}</span>
+                <h3 class="stop-name">${esc(s.name)}</h3>
+                <button class="del-btn" onclick="deleteStop(${s.id})" aria-label="Remove">×</button>
+              </div>
+              <div class="stop-badges">
+                <span class="badge b-time">⏱ ${dur(s.duration)}</span>
+                <span class="badge b-time">→ ${fmt(endTime(s))}</span>
+                ${s.cost > 0
+                  ? `<span class="badge b-cost">💵 $${s.cost.toFixed(2)}</span>`
+                  : `<span class="badge b-free">✓ Free</span>`}
+              </div>
+              ${s.notes ? `<p class="stop-notes">💬 ${esc(s.notes)}</p>` : ''}
+            </div>
+          </div>
+        </div>`;
+
+      if (!last) {
+        if (gap > 0) {
+          html += `
+            <div class="travel-row">
+              <div class="travel-left">
+                <div class="travel-vline travel-vline-gap"></div>
+              </div>
+              <div class="travel-right">
+                <div class="travel-pill">🚶 ${dur(gap)} to next stop</div>
+              </div>
+            </div>`;
+        } else if (gap === 0) {
+          html += `
+            <div class="travel-row">
+              <div class="travel-left">
+                <div class="travel-vline travel-vline-solid"></div>
+              </div>
+              <div class="travel-right">
+                <div class="travel-on-time">⚡ Back-to-back</div>
+              </div>
+            </div>`;
+        }
+      }
+    });
+
+    html += `
+      <div class="timeline-end">
+        <div class="end-dot"></div>
+        <span class="end-label">End of day · ${dur(total)} · $${budget.toFixed(2)} SGD total</span>
+      </div>`;
+
+    tl.innerHTML = html;
+  }
+
+  // ── Stop Modal ────────────────────────────────────────────────────────────
+  function openStopModal() {
+    document.getElementById('stopOverlay').classList.remove('hidden');
+    const p = currentPlan();
+    if (p.stops.length) {
+      const last = p.stops[p.stops.length-1];
+      const m = t2m(last.startTime)+last.duration;
+      document.getElementById('fTime').value = m2t(Math.min(m, 23*60));
+    } else {
+      const now = new Date();
+      document.getElementById('fTime').value = `${pad(now.getHours())}:${pad(Math.round(now.getMinutes()/15)*15%60)}`;
+    }
+    setTimeout(() => document.getElementById('fName').focus(), 80);
+  }
+
+  function closeStopModal() {
+    document.getElementById('stopOverlay').classList.add('hidden');
+    document.getElementById('stopForm').reset();
+  }
+
+  function submitStop(e) {
+    e.preventDefault();
+    const dh = parseInt(document.getElementById('fDh').value)||0;
+    const dm = parseInt(document.getElementById('fDm').value)||0;
+    if (!dh && !dm) {
+      const el = document.getElementById('fDh');
+      el.style.borderColor = 'var(--red)';
+      el.focus();
+      setTimeout(() => el.style.borderColor = '', 1200);
+      return;
+    }
+    addStop({
+      name:  document.getElementById('fName').value.trim(),
+      cat:   document.getElementById('fCat').value,
+      time:  document.getElementById('fTime').value,
+      dh, dm,
+      cost:  document.getElementById('fCost').value,
+      notes: document.getElementById('fNotes').value.trim(),
+    });
+    closeStopModal();
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  // Create default plan with example stops
+  const defaultPlan = createPlan(
+    'Marina Bay Explorer',
+    'Marina Bay & Chinatown',
+    'A classic first-timer route hitting the big sights around the bay, with a hawker lunch break.'
+  );
+  currentPlanId = defaultPlan.id;
+
+  // Add example stops
+  [
+    { name:'Gardens by the Bay', cat:'nature', time:'09:00', dh:2, dm:0,
+      cost:28, notes:'Flower Dome + Cloud Forest domes — book tickets online to skip the queue!' },
+    { name:'Maxwell Food Centre', cat:'food', time:'12:00', dh:1, dm:0,
+      cost:8, notes:'Must-try: Tian Tian Hainanese Chicken Rice 🍗' },
+    { name:'Marina Bay Sands SkyPark', cat:'attraction', time:'14:00', dh:1, dm:30,
+      cost:26, notes:'Spectacular city skyline views from the observation deck' },
+  ].forEach(addStop);
+
+  // Create a second example plan
+  const sentosaPlan = createPlan(
+    'Sentosa Beach Day',
+    'Sentosa Island',
+    'Sun, sand, and theme parks — take the Sentosa Express from VivoCity.'
+  );
+
+  renderPlanTabs();
+  renderPlanInfo();
+  renderChecklist();
+  render();
+</script>
+</body>
+</html>
